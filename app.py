@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
+import pandas as pd
 
 app = Flask(__name__)
 
-# Allow all devices on local network
 CORS(app)
 
 DB_NAME = "election.db"
@@ -27,7 +27,6 @@ def vote():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
-
     cursor.execute(
         "SELECT * FROM votes WHERE voter_name=?",
         (voter_name,)
@@ -35,6 +34,7 @@ def vote():
 
     if cursor.fetchone():
         conn.close()
+
         return jsonify({
             "success": False,
             "message": "This student has already voted."
@@ -90,6 +90,32 @@ def results():
     })
 
 
+# LIVE EXCEL EXPORT FROM RENDER DATABASE
+
+@app.route("/export")
+def export():
+
+    conn = sqlite3.connect(DB_NAME)
+
+    df = pd.read_sql_query(
+        "SELECT * FROM votes",
+        conn
+    )
+
+    df.to_excel(
+        "Election_Voting_Record.xlsx",
+        index=False
+    )
+
+    conn.close()
+
+
+    return jsonify({
+        "success": True,
+        "message": "Excel file generated successfully"
+    })
+
+
 @app.route("/admin-login", methods=["POST"])
 def admin_login():
 
@@ -114,6 +140,7 @@ def admin_login():
 
 
 if __name__ == "__main__":
+
     app.run(
         host="0.0.0.0",
         port=5000,

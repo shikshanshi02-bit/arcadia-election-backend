@@ -4,7 +4,13 @@ import pandas as pd
 conn = sqlite3.connect("election.db")
 
 df = pd.read_sql_query(
-    "SELECT * FROM votes",
+    """
+    SELECT 
+        voter_name,
+        head_boy,
+        head_girl
+    FROM votes
+    """,
     conn
 )
 
