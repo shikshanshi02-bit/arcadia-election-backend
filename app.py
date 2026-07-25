@@ -92,6 +92,8 @@ def results():
 
 # LIVE EXCEL EXPORT FROM RENDER DATABASE
 
+from flask import send_file
+
 @app.route("/export")
 def export():
 
@@ -102,18 +104,19 @@ def export():
         conn
     )
 
+    file_name = "Election_Voting_Record.xlsx"
+
     df.to_excel(
-        "Election_Voting_Record.xlsx",
+        file_name,
         index=False
     )
 
     conn.close()
 
-
-    return jsonify({
-        "success": True,
-        "message": "Excel file generated successfully"
-    })
+    return send_file(
+        file_name,
+        as_attachment=True
+    )
 
 
 @app.route("/admin-login", methods=["POST"])
