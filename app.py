@@ -9,6 +9,22 @@ CORS(app)
 
 DB_NAME = "election.db"
 
+# Ensure votes table has a created_at column for timestamps. This will add the column
+# when the app starts if it's not already present (safe to run multiple times).
+def ensure_created_at_column():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("ALTER TABLE votes ADD COLUMN created_at TEXT DEFAULT (datetime('now'))")
+        conn.commit()
+    except sqlite3.OperationalError:
+        # Column probably already exists; ignore
+        pass
+    finally:
+        conn.close()
+
+ensure_created_at_column()
+
 
 @app.route("/")
 def home():
@@ -42,7 +58,7 @@ def vote():
 
 
     cursor.execute(
-        "INSERT INTO votes(voter_name, head_boy, head_girl) VALUES(?,?,?)",
+        "INSERT INTO votes(voter_name, head_boy, head_girl, created_at) VALUES(?,?,?, datetime('now'))",
         (voter_name, head_boy, head_girl)
     )
 
@@ -97,7 +113,7 @@ def voters():
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT voter_name, head_boy, head_girl FROM votes"
+        "SELECT voter_name, head_boy, head_girl, created_at FROM votes"
     )
 
     rows = cursor.fetchall()
@@ -108,7 +124,7 @@ def voters():
             "voter_name": r[0],
             "head_boy": r[1],
             "head_girl": r[2],
-            "created_at": None,
+            "created_at": r[3],
         }
         for r in rows
     ]
