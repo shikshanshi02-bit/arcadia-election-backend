@@ -90,6 +90,32 @@ def results():
     })
 
 
+@app.route("/voters")
+def voters():
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT voter_name, head_boy, head_girl FROM votes"
+    )
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    data = [
+        {
+            "voter_name": r[0],
+            "head_boy": r[1],
+            "head_girl": r[2],
+            "created_at": None,
+        }
+        for r in rows
+    ]
+
+    return jsonify(data)
+
+
 # LIVE EXCEL EXPORT FROM RENDER DATABASE
 
 from flask import send_file
